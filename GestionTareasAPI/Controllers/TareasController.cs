@@ -1,5 +1,6 @@
 ﻿using GestionTareasAPI.DataAccess;
 using GestionTareasAPI.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -7,6 +8,7 @@ namespace GestionTareasAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize] //Requiere autenticación para todos los endpoints
     public class TareasController : ControllerBase
     {
         private readonly TareasContext _context;
@@ -40,14 +42,19 @@ namespace GestionTareasAPI.Controllers
         [HttpPost]
         public async Task<ActionResult<Tarea>> EnviarTarea(Tarea tarea)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
             _context.Tareas.Add(tarea);
             await _context.SaveChangesAsync();
 
             return CreatedAtAction(nameof(ObtenerTareas), new { id = tarea.Id}, tarea);
         }
 
-        //PUT: api/Controller
-        [HttpPut]
+        //PUT: api/Tareas/5
+        [HttpPut("{id}")]
         public async Task<ActionResult>ActualizarTarea(int id, Tarea tarea)
         {
             if (id != tarea.Id)
@@ -76,8 +83,8 @@ namespace GestionTareasAPI.Controllers
             return NoContent();
         }
 
-        //DELETE: api/Controller
-        [HttpDelete]
+        //DELETE: api/Tareas/5
+        [HttpDelete("{id}")]
         public async Task<ActionResult> EliminarTarea(int id)
         {
             var tarea = await _context.Tareas.FindAsync(id);
